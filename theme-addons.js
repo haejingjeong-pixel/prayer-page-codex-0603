@@ -52,13 +52,6 @@
   var THEME_SWAP_DELAY = 600;
   var backgroundRequestId = 0;
   var imageLoadCache = {};
-  var sinalLightningTimeouts = [];
-  var lightningSources = [
-    { src: "assets/lightning/lightning_05.png", width: 299, height: 362, dx: -80, dy: 25, rotate: -6 },
-    { src: "assets/lightning/lightning_06.png", width: 317, height: 388, dx: -25, dy: 15, rotate: -2 },
-    { src: "assets/lightning/lightning_07.png", width: 290, height: 362, dx: 30, dy: 20, rotate: 3 },
-    { src: "assets/lightning/lightning_08.png", width: 320, height: 374, dx: 90, dy: 28, rotate: 8 }
-  ];
 
   function normalizeAssetSrc(src) {
     return String(src || "").split("?")[0];
@@ -115,13 +108,13 @@
       if (requestId !== backgroundRequestId || activeExtraTheme !== theme || !target) return;
       target.style.backgroundImage = 'url("' + versionedAssetSrc(config.bg) + '")';
       target.removeAttribute("data-codex-background-pending");
-      if (theme === "sinal") syncSinalLightningAnchor();
+      if (theme === "sinal") syncSinalAnchor();
     }).catch(function () {
       var target = document.querySelector('[data-codex-background-pending="' + theme + '"]') || background;
       if (requestId !== backgroundRequestId || !target) return;
       target.style.backgroundImage = 'url("' + versionedAssetSrc(config.bg) + '")';
       target.removeAttribute("data-codex-background-pending");
-      if (theme === "sinal") syncSinalLightningAnchor();
+      if (theme === "sinal") syncSinalAnchor();
     });
   }
 
@@ -169,31 +162,7 @@
       document.body.insertBefore(layer, root);
     });
 
-    // 번개용 별도 레이어 (overflow 잘림 방지)
-    if (!document.getElementById("sinal-lightning-layer")) {
-      var lightningLayer = document.createElement("div");
-      lightningLayer.id = "sinal-lightning-layer";
-      lightningLayer.setAttribute("aria-hidden", "true");
-
-      var flash = document.createElement("span");
-      flash.className = "sinal-lightning-flash";
-      lightningLayer.appendChild(flash);
-
-      var peakGlow = document.createElement("span");
-      peakGlow.className = "sinal-peak-glow";
-      lightningLayer.appendChild(peakGlow);
-
-      lightningSources.forEach(function (source, index) {
-        var lightning = document.createElement("span");
-        lightning.className = "sinal-lightning sinal-lightning-" + (index + 1);
-        lightning.dataset.sourceWidth = String(source.width);
-        lightning.dataset.sourceHeight = String(source.height);
-        lightning.style.backgroundImage = 'url("' + source.src + '")';
-        lightningLayer.appendChild(lightning);
-      });
-
-      document.body.insertBefore(lightningLayer, root);
-    }
+    removeSinalStormLayer();
   }
 
   function parseCssLength(value, axisSize) {
@@ -225,10 +194,9 @@
     return parts;
   }
 
-  function syncSinalLightningAnchor() {
+  function syncSinalAnchor() {
     if (activeExtraTheme !== "sinal") return;
     var layer = document.getElementById("sinal-theme-layer");
-    var lightningLayer = document.getElementById("sinal-lightning-layer");
     var background = findBackgroundNode();
     if (!layer || !background) return;
     var rect = background.getBoundingClientRect();
@@ -244,93 +212,30 @@
     layer.style.setProperty("--sinal-peak-x", peakX.toFixed(2) + "px");
     layer.style.setProperty("--sinal-peak-y", peakY.toFixed(2) + "px");
     layer.style.setProperty("--sinal-bg-scale", scale.toFixed(4));
-    if (lightningLayer) {
-      lightningLayer.style.setProperty("--sinal-peak-x", peakX.toFixed(2) + "px");
-      lightningLayer.style.setProperty("--sinal-peak-y", peakY.toFixed(2) + "px");
-      lightningLayer.style.setProperty("--sinal-bg-scale", scale.toFixed(4));
-    }
-    var allLightnings = Array.from((lightningLayer || layer).querySelectorAll(".sinal-lightning"));
-    allLightnings.forEach(function (lightning) {
-      var width = parseFloat(lightning.dataset.sourceWidth || "0");
-      var height = parseFloat(lightning.dataset.sourceHeight || "0");
-      if (!width || !height) return;
-      lightning.style.width = (width * scale * 1.0).toFixed(2) + "px";
-      lightning.style.height = (height * scale * 1.0).toFixed(2) + "px";
-    });
   }
 
-  function startLightningEffect() {
-    stopLightningEffect();
-    if (activeExtraTheme !== "sinal") return;
-    var lightningLayer = document.getElementById("sinal-lightning-layer");
-    if (!lightningLayer) return;
-    var bolts = Array.from(lightningLayer.querySelectorAll(".sinal-lightning"));
-    var flash = lightningLayer.querySelector(".sinal-lightning-flash");
-    var peakGlow = lightningLayer.querySelector(".sinal-peak-glow");
+  function removeSinalStormLayer() {
+    var layer = document.getElementById("sinal-lightning-layer");
+    if (layer) layer.remove();
+  }
 
-    function strike() {
-      if (activeExtraTheme !== "sinal") return;
-      var count = Math.random() < 0.4 ? 1 : 2;
-      var shuffled = bolts.slice().sort(function () { return Math.random() - 0.5; });
-      var picked = shuffled.slice(0, count);
+  function isGethsemaneActive() {
+    return document.body.classList.contains("codex-theme-gethsemane") ||
+      document.body.dataset.currentTheme === "겟세마네 동산";
+  }
 
-      if (peakGlow) peakGlow.classList.add("active");
-
-      picked.forEach(function (bolt, index) {
-        var delay = index === 0 ? 0 : (60 + Math.random() * 90);
-        bolt.style.setProperty("--rx", (Math.random() * 70 - 35).toFixed(1) + "px");
-        bolt.style.setProperty("--ry", (Math.random() * 50 - 25).toFixed(1) + "px");
-        bolt.style.setProperty("--rr", (Math.random() * 14 - 7).toFixed(1) + "deg");
-        var t1 = window.setTimeout(function () {
-          if (activeExtraTheme !== "sinal") return;
-          bolt.classList.add("flash");
-        }, delay);
-        var t2 = window.setTimeout(function () {
-          if (activeExtraTheme !== "sinal") return;
-          bolt.classList.remove("flash");
-          bolt.style.removeProperty("--rx");
-          bolt.style.removeProperty("--ry");
-          bolt.style.removeProperty("--rr");
-        }, delay + 550);
-        sinalLightningTimeouts.push(t1, t2);
+  function removeGethsemaneSkyEffects() {
+    if (!isGethsemaneActive()) return;
+    [
+      ".gethsemane-haze-layer",
+      ".gethsemane-wind-layer",
+      ".gethsemane-star-layer",
+      ".night-shooting-stars"
+    ].forEach(function (selector) {
+      Array.from(document.querySelectorAll(selector)).forEach(function (node) {
+        node.remove();
       });
-
-      var flashDuration = 60 + Math.random() * 80;
-      var t3 = window.setTimeout(function () {
-        if (activeExtraTheme !== "sinal") return;
-        if (flash) flash.classList.remove("active");
-        if (peakGlow) peakGlow.classList.remove("active");
-      }, flashDuration);
-      sinalLightningTimeouts.push(t3);
-
-      var nextDelay = 2500 + Math.random() * 3000;
-      var t4 = window.setTimeout(function () {
-        if (activeExtraTheme !== "sinal") return;
-        strike();
-      }, nextDelay);
-      sinalLightningTimeouts.push(t4);
-    }
-
-    var initialDelay = 1200 + Math.random() * 1600;
-    var t0 = window.setTimeout(strike, initialDelay);
-    sinalLightningTimeouts.push(t0);
-  }
-
-  function stopLightningEffect() {
-    sinalLightningTimeouts.forEach(function (id) { window.clearTimeout(id); });
-    sinalLightningTimeouts = [];
-    var lightningLayer = document.getElementById("sinal-lightning-layer");
-    if (!lightningLayer) return;
-    lightningLayer.querySelectorAll(".sinal-lightning").forEach(function (bolt) {
-      bolt.classList.remove("flash");
-      bolt.style.removeProperty("--rx");
-      bolt.style.removeProperty("--ry");
-      bolt.style.removeProperty("--rr");
     });
-    var flash = lightningLayer.querySelector(".sinal-lightning-flash");
-    var peakGlow = lightningLayer.querySelector(".sinal-peak-glow");
-    if (flash) flash.classList.remove("active");
-    if (peakGlow) peakGlow.classList.remove("active");
   }
 
   function seedLayer(layerId, className, count, options) {
@@ -363,6 +268,7 @@
 
   function syncPrayerState() {
     document.body.dataset.prayerState = isPrayerActive() ? "praying" : "waiting";
+    removeGethsemaneSkyEffects();
   }
 
   function seedEffects() {
@@ -499,15 +405,16 @@
     updateMenuActive(theme);
     syncPrayerState();
     if (theme === "sinal") {
-      syncSinalLightningAnchor();
-      window.setTimeout(syncSinalLightningAnchor, 80);
-      window.setTimeout(syncSinalLightningAnchor, 260);
-      window.setTimeout(startLightningEffect, 600);
+      removeSinalStormLayer();
+      syncSinalAnchor();
+      window.setTimeout(syncSinalAnchor, 80);
+      window.setTimeout(syncSinalAnchor, 260);
     }
+    removeGethsemaneSkyEffects();
   }
 
   function clearExtraThemeSoon() {
-    stopLightningEffect();
+    removeSinalStormLayer();
     clearScheduledWork();
     activeExtraTheme = "";
     updateMenuActive("");
@@ -621,7 +528,7 @@
     seedEffects();
     syncPrayerState();
     window.addEventListener("resize", function () {
-      syncSinalLightningAnchor();
+      syncSinalAnchor();
     });
     scheduleMenuInjection();
     window.setTimeout(seedEffects, 800);
@@ -640,13 +547,17 @@
       }
       window.setTimeout(syncPrayerState, 40);
       window.setTimeout(syncPrayerState, 240);
+      window.setTimeout(removeGethsemaneSkyEffects, 40);
+      window.setTimeout(removeGethsemaneSkyEffects, 240);
+      window.setTimeout(removeGethsemaneSkyEffects, 900);
     });
     var root = document.getElementById("root");
     if (root) {
       new MutationObserver(function () {
         syncPrayerState();
+        removeGethsemaneSkyEffects();
         updateMenuActive(activeExtraTheme);
-        if (activeExtraTheme === "sinal") syncSinalLightningAnchor();
+        if (activeExtraTheme === "sinal") syncSinalAnchor();
         var menu = document.querySelector('button[data-codex-theme]') && document.querySelector('button[data-codex-theme]').parentElement;
         if (!menu) {
           var desertBtn = Array.from(document.querySelectorAll("button")).find(function (b) { return getText(b).indexOf("사막의 제단") !== -1; });

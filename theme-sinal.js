@@ -35,10 +35,6 @@
     layer.id = "sinal-theme-soft-layer";
     layer.setAttribute("aria-hidden", "true");
 
-    var lightning = document.createElement("span");
-    lightning.className = "sinal-lightning";
-    layer.appendChild(lightning);
-
     [
       { x: "22%", y: "67%", w: "42vw", h: "14vh", s: "1.10", o: "0.28", d: "18s", delay: "-3s" },
       { x: "56%", y: "70%", w: "54vw", h: "18vh", s: "1.00", o: "0.24", d: "21s", delay: "-9s" },
