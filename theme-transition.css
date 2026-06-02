@@ -76,6 +76,27 @@ body.codex-theme-summer .summer-waiting-dim {
   mix-blend-mode: multiply;
 }
 
+@media (max-width: 820px), (pointer: coarse) {
+  body.codex-theme-summer,
+  body.codex-theme-summer #root,
+  body.codex-theme-summer #root > div {
+    background-color: #173528 !important;
+  }
+
+  body.codex-theme-summer [data-codex-theme-background="true"],
+  body[data-current-theme="여름 녹음"] [data-codex-theme-background="true"] {
+    background-position: center top !important;
+    background-size: cover !important;
+    filter: brightness(1.08) saturate(1.04);
+  }
+
+  body.codex-theme-summer .summer-waiting-dim {
+    background:
+      radial-gradient(ellipse at 50% 32%, rgba(28, 58, 34, 0.05) 0%, rgba(12, 32, 20, 0.12) 48%, rgba(3, 12, 7, 0.2) 100%),
+      linear-gradient(180deg, rgba(0, 18, 10, 0.05), rgba(0, 10, 7, 0.2));
+  }
+}
+
 @keyframes codexSlowShootingStar {
   0%, 70%, 100% {
     opacity: 0;
