@@ -4,6 +4,50 @@ body[data-theme="sinal"] {
   background-color: var(--theme-bg, #1a120f);
 }
 
+#gethsemane-darkness-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 14;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 34%, rgba(18, 25, 42, 0.16), rgba(0, 0, 0, 0.44) 64%, rgba(0, 0, 0, 0.68) 100%),
+    rgba(0, 0, 0, 0.34);
+  opacity: 0;
+  transition: opacity 1800ms cubic-bezier(0.42, 0, 0.22, 1);
+}
+
+body.codex-theme-gethsemane #gethsemane-darkness-overlay,
+body[data-current-theme="겟세마네 동산"] #gethsemane-darkness-overlay {
+  display: block;
+  opacity: 0.72;
+}
+
+body.codex-theme-gethsemane[data-prayer-state="praying"] #gethsemane-darkness-overlay,
+body[data-current-theme="겟세마네 동산"][data-prayer-state="praying"] #gethsemane-darkness-overlay {
+  opacity: 0.16;
+}
+
+body.codex-theme-gethsemane [data-codex-theme-background="true"],
+body[data-current-theme="겟세마네 동산"] [data-codex-theme-background="true"],
+body.codex-theme-gethsemane #root div[style*="back_gathe"],
+body[data-current-theme="겟세마네 동산"] #root div[style*="back_gathe"],
+body.codex-theme-gethsemane img[alt="altar"],
+body[data-current-theme="겟세마네 동산"] img[alt="altar"] {
+  filter: none !important;
+  transition: none !important;
+  transition-property: none !important;
+}
+
+body.codex-theme-gethsemane .codex-altar-stage div[style*="blur(12px)"],
+body[data-current-theme="겟세마네 동산"] .codex-altar-stage div[style*="blur(12px)"] {
+  display: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  animation: none !important;
+  transition: none !important;
+}
+
 /* React keeps the previously selected base theme mounted beneath add-on themes.
    Suspend those base-only atmosphere layers while an independent add-on is active. */
 body[data-theme] .gethsemane-front-layer,
@@ -30,6 +74,18 @@ body:not([data-theme="mark"]) #mark-theme-layer,
 body:not([data-theme="jonah"]) #jonah-theme-layer,
 body:not([data-theme="sinal"]) #sinal-theme-layer {
   display: none !important;
+  opacity: 0 !important;
+}
+
+body:not([data-theme="mark"]) #mark-theme-layer *,
+body:not([data-theme="jonah"]) #jonah-theme-layer *,
+body:not([data-theme="sinal"]) #sinal-theme-layer * {
+  display: none !important;
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   opacity: 0 !important;
 }
 
@@ -130,8 +186,18 @@ body[data-theme="jonah"][data-prayer-state="praying"] #jonah-theme-layer::after 
 }
 
 body.codex-theme-gethsemane .gethsemane-front-layer,
+body.codex-theme-gethsemane .gethsemane-atmosphere-dim,
+body.codex-theme-gethsemane .gethsemane-altar-dim,
 body[data-current-theme="겟세마네 동산"] .gethsemane-front-layer {
   display: none !important;
+}
+
+body[data-current-theme="겟세마네 동산"] .gethsemane-atmosphere-dim,
+body[data-current-theme="겟세마네 동산"] .gethsemane-altar-dim {
+  display: none !important;
+  opacity: 0 !important;
+  transition: none !important;
+  animation: none !important;
 }
 
 body.codex-theme-gethsemane .gethsemane-haze-layer,

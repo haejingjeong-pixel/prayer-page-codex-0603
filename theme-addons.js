@@ -52,6 +52,9 @@
   var THEME_SWAP_DELAY = 600;
   var backgroundRequestId = 0;
   var imageLoadCache = {};
+  var gethsemaneCleanupTimers = [];
+  var lastPrayerState = "";
+  var lastGethsemaneActive = false;
 
   function normalizeAssetSrc(src) {
     return String(src || "").split("?")[0];
@@ -146,6 +149,12 @@
   function createLayers() {
     var root = document.getElementById("root");
     if (!root) return;
+    if (!document.getElementById("gethsemane-darkness-overlay")) {
+      var gethsemaneOverlay = document.createElement("div");
+      gethsemaneOverlay.id = "gethsemane-darkness-overlay";
+      gethsemaneOverlay.setAttribute("aria-hidden", "true");
+      document.body.insertBefore(gethsemaneOverlay, root);
+    }
     Object.keys(extraThemes).forEach(function (theme) {
       var id = theme + "-theme-layer";
       if (document.getElementById(id)) return;
@@ -227,9 +236,11 @@
   function removeGethsemaneSkyEffects() {
     if (!isGethsemaneActive()) return;
     [
+      ".gethsemane-atmosphere-dim",
       ".gethsemane-haze-layer",
       ".gethsemane-wind-layer",
       ".gethsemane-star-layer",
+      ".gethsemane-altar-dim",
       ".night-shooting-stars"
     ].forEach(function (selector) {
       Array.from(document.querySelectorAll(selector)).forEach(function (node) {
@@ -237,7 +248,39 @@
         node.style.setProperty("display", "none", "important");
         node.style.setProperty("opacity", "0", "important");
         node.style.setProperty("animation", "none", "important");
+        node.style.setProperty("transition", "none", "important");
+        node.style.setProperty("filter", "none", "important");
+        node.style.setProperty("backdrop-filter", "none", "important");
+        node.style.setProperty("-webkit-backdrop-filter", "none", "important");
+        if (node.getAnimations) {
+          node.getAnimations({ subtree: true }).forEach(function (animation) {
+            animation.cancel();
+          });
+        }
+        Array.from(node.querySelectorAll("*")).forEach(function (child) {
+          child.style.setProperty("display", "none", "important");
+          child.style.setProperty("opacity", "0", "important");
+          child.style.setProperty("animation", "none", "important");
+          child.style.setProperty("transition", "none", "important");
+          child.style.setProperty("filter", "none", "important");
+          child.style.setProperty("backdrop-filter", "none", "important");
+          child.style.setProperty("-webkit-backdrop-filter", "none", "important");
+        });
       });
+    });
+  }
+
+  function clearGethsemaneCleanupTimers() {
+    gethsemaneCleanupTimers.forEach(function (timer) {
+      window.clearTimeout(timer);
+    });
+    gethsemaneCleanupTimers = [];
+  }
+
+  function scheduleGethsemaneCleanup() {
+    clearGethsemaneCleanupTimers();
+    [0, 120].forEach(function (delay) {
+      gethsemaneCleanupTimers.push(window.setTimeout(removeGethsemaneSkyEffects, delay));
     });
   }
 
@@ -270,8 +313,16 @@
   }
 
   function syncPrayerState() {
-    document.body.dataset.prayerState = isPrayerActive() ? "praying" : "waiting";
-    removeGethsemaneSkyEffects();
+    var prayerState = isPrayerActive() ? "praying" : "waiting";
+    var gethsemaneActive = isGethsemaneActive();
+    document.body.dataset.prayerState = prayerState;
+    if (gethsemaneActive && (prayerState !== lastPrayerState || gethsemaneActive !== lastGethsemaneActive)) {
+      scheduleGethsemaneCleanup();
+    } else if (!gethsemaneActive && lastGethsemaneActive) {
+      clearGethsemaneCleanupTimers();
+    }
+    lastPrayerState = prayerState;
+    lastGethsemaneActive = gethsemaneActive;
   }
 
   function seedEffects() {
@@ -550,15 +601,12 @@
       }
       window.setTimeout(syncPrayerState, 40);
       window.setTimeout(syncPrayerState, 240);
-      window.setTimeout(removeGethsemaneSkyEffects, 40);
-      window.setTimeout(removeGethsemaneSkyEffects, 240);
-      window.setTimeout(removeGethsemaneSkyEffects, 900);
+      scheduleGethsemaneCleanup();
     });
     var root = document.getElementById("root");
     if (root) {
       new MutationObserver(function () {
         syncPrayerState();
-        removeGethsemaneSkyEffects();
         updateMenuActive(activeExtraTheme);
         if (activeExtraTheme === "sinal") syncSinalAnchor();
         var menu = document.querySelector('button[data-codex-theme]') && document.querySelector('button[data-codex-theme]').parentElement;
